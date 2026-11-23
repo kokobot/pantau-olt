@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OLT Hioso 2PON</title>
+<style>
+:root{--bg:#edf1f5;--sf:#fff;--ink:#14213a;--mu:#5b6b82;--ln:#d6dde7;--ac:#1d5fd1;--ok:#13805a;--wn:#b86e00;--bd:#c4332b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1626;--sf:#16213a;--ink:#e6ecf7;--mu:#93a3bd;--ln:#2a3857;--ac:#6ea2ff;--ok:#4fd39b;--wn:#f0b04a;--bd:#ff7a70;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1626;--sf:#16213a;--ink:#e6ecf7;--mu:#93a3bd;--ln:#2a3857;--ac:#6ea2ff;--ok:#4fd39b;--wn:#f0b04a;--bd:#ff7a70;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--sf);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:11;background:var(--sf);border-bottom:1px solid var(--ln);padding:12px 16px 0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:18px;margin:0}h2{font-size:15px;margin:0 0 8px}
+.sub{color:var(--mu);font-size:13px;margin:2px 0 0}
+nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
+nav button{flex:1;background:none;border:0;border-bottom:3px solid transparent;color:var(--mu);font:inherit;font-size:14px;font-weight:600;padding:9px 8px;white-space:nowrap;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--ac);border-color:var(--ac)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+main{max-width:760px;margin:0 auto;padding:16px}
+.view{display:none}.view.on{display:block}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent)}
+.ok{--c:var(--ok)}.wn{--c:var(--wn)}.bd{--c:var(--bd)}.mu{--c:var(--mu)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1}.stat span{color:var(--mu);font-size:13px}
+.pons{display:grid;gap:10px;margin-bottom:16px}
+.bar{height:8px;border-radius:4px;background:color-mix(in srgb,var(--mu) 25%,transparent);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.kv{display:flex;justify-content:space-between;color:var(--mu);font-size:13px}
+.kv b{color:var(--ink);font-weight:600}
+.item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--ln)}
+.item:first-of-type{border-top:0}
+.btn{font:inherit;font-weight:600;border:1px solid var(--ac);background:var(--ac);color:var(--sf);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn.g{background:none;color:var(--ac)}.btn.d{background:none;color:var(--bd);border-color:var(--bd)}
+.tools{display:flex;gap:8px;margin-bottom:10px}
+input,select{font:inherit;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:9px 10px}
+input{flex:1;min-width:0}.tools.w{flex-wrap:wrap}.tools.w input{min-width:100px}.card+.card{margin-top:10px}.seg{display:flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden}.seg button{background:none;border:0;color:var(--mu);font:inherit;font-size:13px;font-weight:600;padding:5px 10px;cursor:pointer}.seg button.on{background:var(--ac);color:var(--sf)}
+.wrap{overflow-x:auto;background:var(--sf);border:1px solid var(--ln);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--ln);white-space:nowrap}
+th{border-top:0;color:var(--mu);font-size:13px;font-weight:600}
+tbody tr{cursor:pointer}tbody tr:hover{background:color-mix(in srgb,var(--ac) 8%,transparent)}
+.log{list-style:none;margin:0;padding:0}.log li{padding:9px 0;border-top:1px solid var(--ln);font-size:14px}
+.log li:first-child{border-top:0}.log time{color:var(--mu);font-size:12px;display:block}
+dialog{border:1px solid var(--ln);border-radius:12px;background:var(--sf);color:var(--ink);width:min(92vw,420px);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sf);padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+#toast.on{opacity:1}
+@media (min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}.pons{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <div><h1 id="ttl">OLT Hioso 2PON</h1><p class="sub" id="sub"></p></div>
+    <span class="chip ok" id="mchip">Mode demo</span>
+  </div>
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-v="sum">Ringkasan</button>
+    <button role="tab" aria-selected="false" data-v="onu">ONU</button>
+    <button role="tab" aria-selected="false" data-v="alm" id="atab">Alarm</button>
+    <button role="tab" aria-selected="false" data-v="svc">Layanan</button>
+    <button role="tab" aria-selected="false" data-v="log">Log</button>
+    <button role="tab" aria-selected="false" data-v="set">Pengaturan</button>
+  </nav>
+</header>
+<main>
+  <section class="view on" id="sum">
+    <div class="stats" id="stats"></div>
+    <div class="pons" id="pons"></div>
+    <div class="card"><div class="row"><h2>Trafik</h2><div class="seg" id="seg"><button data-tp="0" class="on">Semua</button><button data-tp="1">PON 1</button><button data-tp="2">PON 2</button></div></div>
+      <svg id="tsvg" viewBox="0 0 300 120" preserveAspectRatio="none" role="img" aria-label="Grafik trafik unduh dan unggah, 2,5 menit terakhir" style="width:100%;height:140px;display:block;margin:10px 0"></svg>
+      <div class="kv"><span id="tnow"></span><span id="tmax"></span></div>
+      <div class="kv"><span><span class="chip" style="--c:var(--ac)">Unduh</span> <span class="chip ok">Unggah</span></span><span>2,5 menit terakhir</span></div></div>
+    <div class="card"><h2>ONU belum terdaftar</h2><div id="pend"></div></div>
+  </section>
+  <section class="view" id="onu">
+    <div class="tools">
+      <input id="q" type="search" placeholder="Cari nama atau serial" aria-label="Cari ONU">
+      <select id="f" aria-label="Filter status">
+        <option value="">Semua</option><option value="online">Online</option>
+        <option value="offline">Offline</option><option value="los">LOS</option><option value="disabled">Nonaktif</option>
+      </select>
+    </div>
+    <div class="wrap"><table>
+      <thead><tr><th>ONU</th><th>PON</th><th>RX</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+  <section class="view" id="alm">
+    <div class="card"><div id="al"></div></div>
+  </section>
+  <section class="view" id="svc">
+    <div class="card"><h2>VLAN</h2><div id="vl"></div>
+      <div class="tools w"><input id="vid" type="number" min="1" max="4094" placeholder="ID VLAN" aria-label="ID VLAN"><input id="vn" placeholder="Nama VLAN" aria-label="Nama VLAN"><button class="btn" data-add="v">Tambah</button></div></div>
+    <div class="card"><h2>Profil layanan</h2><div id="pl"></div>
+      <div class="tools w"><input id="pn" placeholder="Nama profil" aria-label="Nama profil"><input id="pd" type="number" min="1" placeholder="Mbps" aria-label="Kecepatan Mbps"><button class="btn" data-add="p">Tambah</button></div></div>
+  </section>
+  <section class="view" id="set">
+    <div class="card"><h2>Perangkat</h2>
+      <div class="tools w"><input id="dn" value="OLT Hioso 2PON" aria-label="Nama perangkat"><input id="ip" value="192.168.1.1" aria-label="Alamat IP"></div>
+      <button class="btn" data-save="1">Simpan</button></div>
+    <div class="card"><h2>Mode online</h2><p class="sub" id="ost">Belum terhubung, data masih simulasi. Sambungkan kabel LAN ke OLT, isi IP OLT di kartu Perangkat, lalu isi login dan halaman daftar ONU di bawah.</p>
+      <div class="tools w" style="margin:10px 0 0"><input id="ou" placeholder="Pengguna OLT" autocomplete="off" aria-label="Pengguna OLT"><input id="opw" type="password" placeholder="Kata sandi" autocomplete="off" aria-label="Kata sandi OLT"><input id="op" value="/" placeholder="Contoh: /onu_list.html" aria-label="Alamat halaman daftar ONU di OLT"><button class="btn" data-conn="1">Hubungkan</button></div>
+      <p class="sub" style="margin-top:10px">Browser biasanya memblokir pembacaan halaman OLT dari file lokal. Buka Chrome dengan mode khusus (Windows): chrome.exe --disable-web-security --user-data-dir=C:\olt-profile, lalu buka file ini di Chrome itu. Pakai profil tersebut hanya untuk OLT.</p></div>
+    <div class="card"><h2>Pantau lewat HP</h2>
+      <ol class="sub" style="padding-left:20px;margin:0"><li>Ketuk Salin kode.</li><li>Di Chrome, buka halaman OLT dan simpan sebagai bookmark (menu titik tiga, ikon bintang). Ubah namanya jadi Pantau OLT, lalu tempel kode di kolom URL bookmark.</li><li>Masuk ke OLT seperti biasa dan buka halaman daftar ONU. Ketik Pantau OLT di kolom alamat dan pilih bookmark itu. Jangan menempel kode langsung di kolom alamat, Chrome menghapus awalan javascript.</li></ol>
+      <textarea id="bm" readonly rows="3" aria-label="Kode pantau OLT" style="width:100%;margin-top:10px;font:12px monospace;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:8px"></textarea>
+      <button class="btn" data-bm="1" style="margin-top:8px">Salin kode</button></div>
+  </section>
+  <section class="view" id="log">
+    <div class="card"><ul class="log" id="logl"></ul></div>
+  </section>
+</main>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status"></div>
+<script>
+var L={online:["Online","ok"],offline:["Offline","mu"],los:["LOS","bd"],disabled:["Nonaktif","wn"]};
+var raw=[[1,"Budi Santoso","HWTC4A1F20B1",-19.8,1.2,"online"],[1,"Siti Rahma","HWTC4A1F20C7",-21.4,1.9,"online"],[1,"Warung Pak Dedi","ZTEG5D80A1E2",-24.9,3.4,"online"],[1,"Rudi Hartono","HWTC4A1F2211",-28.3,5.1,"online"],[1,"Ani Lestari","HWTC4A1F23F0",-30.7,6.0,"los"],[1,"Kantor Desa","HSGQ0C77B3A4",-22.0,2.2,"online"],
+[2,"Eko Prasetyo","HWTC6E02D5A9",-18.6,0.8,"online"],[2,"Dewi Anggraini","HWTC6E02D61B",-20.9,1.5,"online"],[2,"Toko Maju Jaya","ZTEG5D80B7C3",-23.5,2.8,"offline"],[2,"Hendra Wijaya","HWTC6E02D7F2",-26.2,4.3,"online"],[2,"Lina Marlina","HSGQ0C77C0D8",-25.1,3.9,"online"],[2,"Agus Salim","HWTC6E02D8E5",-22.7,2.5,"disabled"]];
+var ip="192.168.1.1";
+var vlans=[{id:100,n:"Internet"},{id:200,n:"IPTV"},{id:300,n:"Manajemen OLT"}];
+var profs=[{n:"Rumah 10 Mbps",d:10},{n:"Rumah 20 Mbps",d:20},{n:"Bisnis 50 Mbps",d:50}];
+var onus=raw.map(function(r,i){return{id:i+1,pon:r[0],name:r[1],sn:r[2],rx:r[3],km:r[4],s:r[5],pf:profs[i%3].n}});
+var pend=[{sn:"HWTC7C3E91A2",pon:2},{sn:"ZTEG8B10D4F5",pon:1}];
+var logs=[];
+var $=function(i){return document.getElementById(i)};
+function now(){return new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
+function log(m){logs.unshift({t:now(),m:m});renderLog()}
+function toast(m){var t=$("toast");t.textContent=m;t.className="on";clearTimeout(toast.h);toast.h=setTimeout(function(){t.className=""},2200)}
+function rxCls(o){return o.s!=="online"?"mu":o.rx<-29?"bd":o.rx<-26?"wn":"ok"}
+function chip(s){return '<span class="chip '+L[s][1]+'">'+L[s][0]+'</span>'}
+function renderSum(){
+  var on=onus.filter(function(o){return o.s==="online"}),
+      los=onus.filter(function(o){return o.s==="los"}).length,
+      off=onus.filter(function(o){return o.s==="offline"||o.s==="disabled"}).length,
+      avg=on.length?(on.reduce(function(a,o){return a+o.rx},0)/on.length).toFixed(1):"-";
+  $("stats").innerHTML=[[on.length,"ONU online"],[off,"Offline atau nonaktif"],[los,"LOS"],[avg+" dBm","Rata-rata RX"]].map(function(x){return '<div class="card stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join("");
+  $("pons").innerHTML=[1,2].map(function(p){
+    var a=onus.filter(function(o){return o.pon===p}),n=a.filter(function(o){return o.s==="online"}).length;
+    return '<div class="card"><div class="row"><h2>PON '+p+'</h2>'+chip(n?"online":"offline")+'</div>'+
+    '<div class="bar"><i style="width:'+Math.round(n/Math.max(a.length,1)*100)+'%"></i></div>'+
+    '<div class="kv"><span>ONU online</span><b>'+n+' dari '+a.length+'</b></div>'+
+    '<div class="kv"><span>Daya TX</span><b>+3,5 dBm</b></div><div class="kv"><span>Panjang gelombang</span><b>1490 nm turun, 1310 nm naik</b></div></div>'}).join("");
+  $("pend").innerHTML=pend.length?pend.map(function(p,i){return '<div class="item"><div><b>'+p.sn+'</b><div class="sub">PON '+p.pon+'</div></div><button class="btn" data-reg="'+i+'">Daftarkan</button></div>'}).join(""):'<p class="sub">Tidak ada ONU baru. ONU yang terdeteksi di PON akan muncul di sini.</p>';
+  $("sub").textContent=ip+", aktif "+up();
+}
+var t0=Date.now()-(3*86400+5*3600+12*60)*1000;
+function up(){var s=Math.floor((Date.now()-t0)/1000);return Math.floor(s/86400)+" hari "+Math.floor(s%86400/3600)+" jam"}
+function renderOnu(){
+  var q=$("q").value.toLowerCase(),f=$("f").value;
+  var a=onus.filter(function(o){return(!f||o.s===f)&&(o.name+o.sn).toLowerCase().indexOf(q)>-1});
+  $("rows").innerHTML=a.length?a.map(function(o){return '<tr data-id="'+o.id+'"><td><b>'+o.name+'</b><div class="sub">'+o.sn+'</div></td><td>'+o.pon+'</td><td><span class="chip '+rxCls(o)+'">'+(o.s==="online"||o.s==="los"?o.rx.toFixed(1)+" dBm":"-")+'</span></td><td>'+chip(o.s)+'</td></tr>'}).join(""):'<tr><td colspan="4">Tidak ada ONU yang cocok. Ubah kata kunci atau filter.</td></tr>';
+}
+function renderLog(){$("logl").innerHTML=logs.length?logs.map(function(l){return '<li><time>'+l.t+'</time>'+l.m+'</li>'}).join(""):'<li>Belum ada aktivitas.</li>'}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function renderSvc(){
+  $("vl").innerHTML=vlans.map(function(v,i){return '<div class="item"><div><b>VLAN '+v.id+'</b><div class="sub">'+esc(v.n)+'</div></div><button class="btn d" data-dv="'+i+'">Hapus</button></div>'}).join("");
+  $("pl").innerHTML=profs.map(function(p,i){var n=onus.filter(function(o){return o.pf===p.n}).length;return '<div class="item"><div><b>'+esc(p.n)+'</b><div class="sub">'+p.d+' Mbps, dipakai '+n+' ONU</div></div><button class="btn d" data-dp="'+i+'">Hapus</button></div>'}).join("");
+}
+var traf={1:{d:[],u:[]},2:{d:[],u:[]}},tp=0,acked={};
+function step(){[1,2].forEach(function(p){var t=traf[p],n=onus.filter(function(o){return o.pon===p&&o.s==="online"}).length,tg=n*55*(.5+Math.random()),pd=t.d.length?t.d[t.d.length-1]:tg,d=Math.round(pd*.6+tg*.4);t.d.push(d);t.u.push(Math.round(d*(.18+Math.random()*.08)));if(t.d.length>30){t.d.shift();t.u.shift()}})}
+for(var k=0;k<30;k++)step();
+function renderTraf(){
+  var sr=function(c){return tp?traf[tp][c]:traf[1][c].map(function(v,i){return v+traf[2][c][i]})},d=sr("d"),u=sr("u"),n=d.length,top=Math.ceil(Math.max.apply(null,d.concat(u,[50]))/100)*100,W=300,H=120;
+  var pts=function(a){return a.map(function(v,i){return (i*W/(n-1)).toFixed(1)+","+(H-v/top*H).toFixed(1)}).join(" ")};
+  var g=[.25,.5,.75].map(function(f){var y=H*f;return '<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--ln);stroke-width:1"/>'}).join("");
+  $("tsvg").innerHTML=g+'<polygon points="0,'+H+' '+pts(d)+' '+W+','+H+'" style="fill:var(--ac);opacity:.12"/><polyline points="'+pts(d)+'" style="fill:none;stroke:var(--ac);stroke-width:2" vector-effect="non-scaling-stroke"/><polyline points="'+pts(u)+'" style="fill:none;stroke:var(--ok);stroke-width:2" vector-effect="non-scaling-stroke"/>';
+  $("tnow").innerHTML='Unduh <b>'+d[n-1]+'</b> Mbps, unggah <b>'+u[n-1]+'</b> Mbps';
+  $("tmax").textContent="Skala 0 sampai "+top+" Mbps";
+}
+function renderAlm(){
+  var a=[];
+  onus.forEach(function(o){
+    if(o.s==="los")a.push({k:o.id+"los",c:"bd",l:"Kritis",m:"LOS: sinyal "+o.name+" hilang di PON "+o.pon});
+    if(o.s==="offline")a.push({k:o.id+"off",c:"wn",l:"Mayor",m:o.name+" offline"});
+    if(o.s==="online"&&o.rx<-27)a.push({k:o.id+"rx",c:"wn",l:"Peringatan",m:"Daya RX "+o.name+" rendah, "+o.rx.toFixed(1)+" dBm"});
+  });
+  pend.forEach(function(p){a.push({k:"p"+p.sn,c:"mu",l:"Info",m:"ONU baru "+p.sn+" terdeteksi di PON "+p.pon+", belum terdaftar"})});
+  var keys=a.map(function(x){return x.k});
+  Object.keys(acked).forEach(function(q){if(keys.indexOf(q)<0)delete acked[q]});
+  var ord={bd:0,wn:1,mu:2};
+  a.sort(function(x,y){return (acked[x.k]?1:0)-(acked[y.k]?1:0)||ord[x.c]-ord[y.c]});
+  var c=a.filter(function(x){return !acked[x.k]}).length;
+  $("atab").textContent="Alarm"+(c?" ("+c+")":"");
+  $("al").innerHTML=a.length?a.map(function(x){return '<div class="item"'+(acked[x.k]?' style="opacity:.55"':'')+'><div><span class="chip '+x.c+'">'+x.l+'</span><div>'+esc(x.m)+'</div></div>'+(acked[x.k]?'<span class="sub">Dibaca</span>':'<button class="btn g" data-ack="'+x.k+'">Tandai dibaca</button>')+'</div>'}).join(""):'<p class="sub">Tidak ada alarm aktif. Masalah pada ONU dan PON akan muncul di sini.</p>';
+}
+var online=false,oTimer=null,inApp=!!window.AndroidOLT,cbs={};
+window.__oltDone=function(id,ok,t){var c=cbs[id];delete cbs[id];if(c)ok?c[0](t):c[1](new Error(t))};
+function nativeGet(url,u,p){return new Promise(function(res,rej){var id=String(Date.now())+Math.random();cbs[id]=[res,rej];AndroidOLT.get(id,url,u,p)})}
+function saveLogin(){if(!inApp)return;try{localStorage.setItem("olt-login",JSON.stringify({ip:$("ip").value,u:$("ou").value,p:$("opw").value,pg:$("op").value}))}catch(x){}}
+function oltPantau(){
+var D=[];function W(w){try{D.push(w.document);for(var i=0;i<w.frames.length;i++)W(w.frames[i])}catch(e){}};W(window);
+var K=function(x){x=x.toLowerCase();return /\bsn\b|mac|serial|loid/.test(x)?"sn":/rx|receiv|optical|power/.test(x)?"rx":/status|state/.test(x)?"s":/name|desc|label|customer/.test(x)?"name":""};var tb=null,hi=0,best=0,T=[];D.forEach(function(d){[].forEach.call(d.querySelectorAll("table"),function(t){T.push(t);for(var i=0;i<t.rows.length&&i<6;i++){var s={};[].forEach.call(t.rows[i].cells,function(c){var k=K(c.textContent.trim());if(k)s[k]=1});var n=Object.keys(s).length;if(n>best||(n===best&&n>0&&t.rows.length>tb.rows.length)){best=n;tb=t;hi=i}}})});
+var P=String.fromCharCode(37);
+var CSS=[".p{--bg:rgb(237,241,245);--sf:rgb(255,255,255);--ink:rgb(20,33,58);--mu:rgb(91,107,130);--ln:rgb(214,221,231);--ac:rgb(29,95,209);--ok:rgb(19,128,90);--wn:rgb(184,110,0);--bd:rgb(196,51,43);min-height:100~;background:var(--bg);color:var(--ink);font:15px/1.45 'Segoe UI',system-ui,-apple-system,sans-serif;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}",
+"@media (prefers-color-scheme:dark){.p{--bg:rgb(14,22,38);--sf:rgb(22,33,58);--ink:rgb(230,236,247);--mu:rgb(147,163,189);--ln:rgb(42,56,87);--ac:rgb(110,162,255);--ok:rgb(79,211,155);--wn:rgb(240,176,74);--bd:rgb(255,122,112)}}",
+".p *{box-sizing:border-box}.p h1,.p h2,.p p,.p ul{margin:0;padding:0}.p ul{list-style:none}",
+".ok{--c:var(--ok)}.wn{--c:var(--wn)}.bd{--c:var(--bd)}.mu{--c:var(--mu)}",
+".h{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--sf);border-bottom:1px solid var(--ln);padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}",
+".h h1{font-size:18px;line-height:1.2}.u{color:var(--mu);font-size:13px;margin-top:2px}",
+".a{display:flex;gap:8px;flex:none}.p button{font:inherit;font-size:14px;font-weight:600;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--ac);background:var(--ac);color:var(--sf);cursor:pointer}.p button.g{background:none;color:var(--ac)}",
+".p button:focus-visible,.p input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}",
+".w{max-width:760px;margin:0 auto;padding:16px}",
+".g{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media (min-width:600px){.g{grid-template-columns:repeat(4,1fr)}}",
+".c{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:14px}",
+".s b{display:block;font-size:26px;line-height:1.1}.s b.bd{color:var(--bd)}.s span{color:var(--mu);font-size:13px}",
+".w h2{display:flex;align-items:center;justify-content:space-between;font-size:15px;margin:22px 0 8px}",
+".k{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 15~,transparent)}",
+".i{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid var(--ln)}.i:first-child{border-top:0;padding-top:0}.i:last-child{padding-bottom:0}.i .k{flex:none;margin-top:1px}",
+".z{color:var(--mu);font-size:14px}",
+".qi{width:100~;font:inherit;font-size:16px;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px 12px;margin-bottom:10px}",
+".l{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:0 14px}",
+".o{padding:12px 0;border-top:1px solid var(--ln)}.o:first-child{border-top:0}",
+".t{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.t b{display:block}.t small{display:block;color:var(--mu);font-size:12px}",
+".m{display:flex;align-items:center;gap:10px;margin-top:8px}.bar{flex:1;height:6px;border-radius:3px;background:color-mix(in srgb,var(--mu) 25~,transparent);overflow:hidden}.bar span{display:block;height:100~;border-radius:3px;background:var(--c)}",
+".m em{font-style:normal;font-size:13px;font-weight:600;color:var(--c);min-width:76px;text-align:right}",
+".e{padding:14px 0;color:var(--mu)}.n p{color:var(--mu);margin-top:4px}.n h2{margin:0}.x{padding:8px 0;border-top:1px solid var(--ln);font-size:13px;color:var(--mu);overflow-wrap:anywhere}"
+].join("").replace(/~/g,P);
+var old=document.getElementById("olt-pantau");if(old)old.remove();
+var b=document.createElement("div");b.id="olt-pantau";b.style.cssText="position:fixed;inset:0;z-index:2147483647;overflow:auto";
+var sh=b.attachShadow?b.attachShadow({mode:"open"}):b;
+var E=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")};
+var M=function(t,p,x){return "<div class='c n'><h2>"+t+"</h2><p>"+p+"</p>"+(x||"")+"</div>"};
+var sc={Online:"ok",LOS:"bd",Offline:"mu",Nonaktif:"wn"};
+var R=[],h="",sub="Halaman OLT ini";
+var cl=function(r){return r.s==="Online"?(r.rx===null?"mu":r.rx<-27?"bd":r.rx<-24?"wn":"ok"):r.s==="LOS"?"bd":"mu"};
+var row=function(r){var f=r.rx===null?0:Math.max(0,Math.min(1,(r.rx+30)/20));return "<li class=o><div class=t><div><b>"+E(r.n)+"</b>"+(r.sn?"<small>"+E(r.sn)+"</small>":"")+"</div><span class='k "+sc[r.s]+"'>"+r.s+"</span></div><div class='m "+cl(r)+"'><span class=bar><span style='width:"+Math.round(f*100)+P+"'></span></span><em>"+(r.rx===null?"-":r.rx.toFixed(1)+" dBm")+"</em></div></li>"};
+var rows=function(q){q=q.toLowerCase();var a=R.filter(function(r){return (r.n+" "+r.sn).toLowerCase().indexOf(q)>-1});return a.length?a.map(row).join(""):"<li class=e>Tidak ada ONU yang cocok. Ubah kata kunci.</li>"};
+if(!T.length){h=M("Tabel ONU tidak ditemukan","Buka halaman daftar ONU di OLT, lalu jalankan lagi.")}else if(best<2){h=M("Kolom tidak dikenali","Jika daftar ONU belum tampil, tekan Search di halaman OLT dulu, lalu jalankan lagi. Isi tabel yang terbaca:",T.sort(function(a,b){return b.rows.length-a.rows.length}).slice(0,3).map(function(t){return "<div class=x>"+t.rows.length+" baris<br>"+[].slice.call(t.rows,0,3).map(function(r){return E([].map.call(r.cells,function(c){return c.textContent.trim().slice(0,18)}).join(" | "))}).join("<br>")+"</div>"}).join(""))}else{
+var hd=[].map.call(tb.rows[hi].cells,function(x){return x.textContent.trim()}),m={};
+hd.forEach(function(x,i){x=x.toLowerCase();var k=/\bsn\b|mac|serial|loid/.test(x)?"sn":/rx|receiv|optical|power/.test(x)?"rx":/status|state/.test(x)?"s":/name|desc|label|customer/.test(x)?"name":"";if(k&&m[k]===undefined)m[k]=i});
+if(m.sn===undefined&&m.name===undefined){h=M("Kolom tidak dikenali","Judul kolom yang terbaca: "+E(hd.join(", ")))}else{
+var S=function(t){t=t.toLowerCase();return /los|dying/.test(t)?"LOS":/disab|deact|block/.test(t)?"Nonaktif":/inactive|offline|down|unreg/.test(t)?"Offline":/online|up|work|active|normal/.test(t)?"Online":"Offline"};
+R=[].slice.call(tb.rows,hi+1).filter(function(r){return r.cells.length>1}).map(function(r){var g=function(k){return m[k]===undefined||!r.cells[m[k]]?"":r.cells[m[k]].textContent.trim()},rx=parseFloat(g("rx").replace(",","."));return{n:g("name")||g("sn"),sn:g("name")?g("sn"):"",rx:isNaN(rx)?null:rx,s:S(g("s"))}});
+var on=R.filter(function(r){return r.s==="Online"}),los=R.filter(function(r){return r.s==="LOS"}).length,rr=on.filter(function(r){return r.rx!==null}),avg=rr.length?(rr.reduce(function(a,r){return a+r.rx},0)/rr.length).toFixed(1)+" dBm":"-";
+var AL=[];R.forEach(function(r){if(r.s==="LOS")AL.push([0,"bd","Kritis","LOS: "+r.n]);else if(r.s==="Offline")AL.push([1,"wn","Mayor",r.n+" offline"]);else if(r.s==="Online"&&r.rx!==null&&r.rx<-27)AL.push([2,"wn","Peringatan","Daya RX "+r.n+" rendah, "+r.rx.toFixed(1)+" dBm"])});
+AL.sort(function(x,y){return x[0]-y[0]});
+sub=R.length+" ONU dibaca pukul "+new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+h="<div class=g>"+[[on.length,"ONU online",""],[R.length-on.length-los,"Offline atau nonaktif",""],[los,"LOS",los?"bd":""],[avg,"Rata-rata RX",""]].map(function(x){return "<div class='c s'><b"+(x[2]?" class="+x[2]:"")+">"+x[0]+"</b><span>"+x[1]+"</span></div>"}).join("")+"</div>"+
+"<h2>Alarm <span class='k "+(AL.length?"bd":"ok")+"'>"+AL.length+"</span></h2><div class=c>"+(AL.length?AL.map(function(a){return "<div class=i><span class='k "+a[1]+"'>"+a[2]+"</span><span>"+E(a[3])+"</span></div>"}).join(""):"<p class=z>Tidak ada alarm aktif.</p>")+"</div>"+
+"<h2>Daftar ONU <span class='k mu'>"+R.length+"</span></h2><input class=qi type=search placeholder='Cari nama atau serial' aria-label='Cari ONU'><ul class=l>"+rows("")+"</ul>"}}
+sh.innerHTML="<style>"+CSS+"</style><div class=p><header class=h><div><h1>Pantau OLT</h1><p class=u>"+sub+"</p></div><div class=a><button class='g rf'>Muat ulang</button><button class=cl>Tutup</button></div></header><div class=w>"+h+"</div></div>";
+sh.querySelector(".cl").onclick=function(){b.remove()};
+sh.querySelector(".rf").onclick=function(){b.remove();oltPantau()};
+var qi=sh.querySelector(".qi");if(qi)qi.oninput=function(){sh.querySelector(".l").innerHTML=rows(qi.value)};
+document.documentElement.appendChild(b);
+}
+function bmCode(){return "javascript:("+oltPantau.toString().replace(/\s*\n\s*/g," ")+")()"}
+$("bm").value=bmCode();
+function hmap(h){h=h.toLowerCase();return /\bsn\b|mac|serial|loid/.test(h)?"sn":/rx|receiv|optical|power/.test(h)?"rx":/status|state/.test(h)?"s":/pon|port/.test(h)?"pon":/name|desc|label|customer/.test(h)?"name":/dist|length/.test(h)?"km":""}
+function sState(t){t=t.toLowerCase();return /los|dying/.test(t)?"los":/disab|deact|block/.test(t)?"disabled":/inactive|offline|down|unreg/.test(t)?"offline":/online|up|work|active|normal/.test(t)?"online":"offline"}
+function pull(){
+  var b=location.protocol==="file:"||!/^(localhost|127\.0\.0\.1)$/.test(location.hostname),opt={credentials:"include"},u=$("ou").value.trim();if(b&&u)opt.headers={Authorization:"Basic "+btoa(u+":"+$("opw").value)};
+  var url=(b?"http://"+($("ip").value.trim()||ip):"/olt")+$("op").value.trim();
+  return (inApp?nativeGet(url,u,$("opw").value):fetch(url,opt).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text()})).then(function(h){
+    var doc=new DOMParser().parseFromString(h,"text/html"),tb=[].slice.call(doc.querySelectorAll("table")).sort(function(x,y){return y.rows.length-x.rows.length})[0];
+    if(!tb||tb.rows.length<2)throw new Error("tabel ONU tidak ditemukan di halaman itu");
+    var hd=[].map.call(tb.rows[0].cells,function(c){return c.textContent.trim()}),m={};
+    hd.forEach(function(x,i){var k=hmap(x);if(k&&m[k]===undefined)m[k]=i});
+    if(m.sn===undefined&&m.name===undefined)throw new Error("kolom tidak dikenali, judul kolom: "+hd.join(", "));
+    var cell=function(r,k){return m[k]===undefined||!r.cells[m[k]]?"":r.cells[m[k]].textContent.trim()};
+    onus=[].slice.call(tb.rows,1).filter(function(r){return r.cells.length>1}).map(function(r,i){
+      var rx=parseFloat(cell(r,"rx").replace(",",".")),km=parseFloat(cell(r,"km"))||0,pn=(cell(r,"pon").match(/\d+/g)||[1]).pop();
+      return{id:i+1,pon:+pn||1,name:cell(r,"name")||cell(r,"sn"),sn:cell(r,"sn")||"-",rx:isNaN(rx)?0:rx,km:km>100?km/1000:km,s:sState(cell(r,"s")),pf:profs[0].n}});
+    renderAll();
+  });
+}
+function renderAll(){renderSum();renderOnu();renderSvc();renderLog();renderAlm();renderTraf()}
+document.addEventListener("change",function(e){if(e.target.dataset.pf===undefined)return;var o=onus.filter(function(x){return x.id==$("dlg").dataset.id})[0];o.pf=e.target.value;log(o.name+" memakai profil "+o.pf);toast("Profil diubah");renderSvc()});
+function show(o){
+  var d=$("dlg");
+  d.innerHTML='<div class="row"><h2>'+o.name+'</h2>'+chip(o.s)+'</div><p class="sub">'+o.sn+'</p>'+
+  '<div class="kv"><span>Port</span><b>PON '+o.pon+'</b></div><div class="kv"><span>Daya RX</span><b>'+o.rx.toFixed(1)+' dBm</b></div><div class="kv"><span>Jarak</span><b>'+o.km+' km</b></div>'+
+  '<div class="kv"><span>Profil</span><select data-pf aria-label="Profil layanan">'+profs.map(function(p){return '<option'+(p.n===o.pf?' selected':'')+'>'+esc(p.n)+'</option>'}).join("")+'</select></div>'+
+  '<div class="acts"><button class="btn" data-a="reboot">Reboot</button><button class="btn g" data-a="toggle">'+(o.s==="disabled"?"Aktifkan":"Nonaktifkan")+'</button><button class="btn d" data-a="del">Hapus</button><button class="btn g" data-a="close">Tutup</button></div>';
+  d.dataset.id=o.id;d.showModal();
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest("button,tr");if(!t)return;
+  if(t.dataset.v){document.querySelectorAll("nav button").forEach(function(b){b.setAttribute("aria-selected",b===t)});document.querySelectorAll(".view").forEach(function(v){v.classList.toggle("on",v.id===t.dataset.v)});return}
+  if(t.dataset.reg){var p=pend.splice(+t.dataset.reg,1)[0];onus.push({id:Date.now(),pf:profs[0].n,pon:p.pon,name:"ONU baru "+p.sn.slice(-4),sn:p.sn,rx:-21.3,km:1.5,s:"online"});log("ONU "+p.sn+" didaftarkan di PON "+p.pon);toast("ONU didaftarkan");renderAll();return}
+  if(t.dataset.add==="v"){var vi=+$("vid").value,vn=$("vn").value.trim();if(!vi||vi>4094||!vn){toast("Isi ID VLAN 1 sampai 4094 dan nama");return}if(vlans.some(function(v){return v.id===vi})){toast("VLAN "+vi+" sudah ada");return}vlans.push({id:vi,n:vn});$("vid").value="";$("vn").value="";log("VLAN "+vi+" ditambahkan");renderSvc();return}
+  if(t.dataset.add==="p"){var pd=+$("pd").value,pn=$("pn").value.trim();if(!pd||!pn){toast("Isi nama profil dan kecepatan");return}profs.push({n:pn,d:pd});$("pd").value="";$("pn").value="";log("Profil "+pn+" ditambahkan");renderSvc();return}
+  if(t.dataset.bm){var ta=$("bm");ta.focus();ta.select();ta.setSelectionRange(0,1e7);var ok=false;try{ok=document.execCommand("copy")}catch(x){}toast(ok?"Kode disalin":"Gagal menyalin, tahan teks lalu pilih Salin");return}
+  if(t.dataset.conn){$("ost").textContent="Menghubungkan...";pull().then(function(){online=true;saveLogin();pend=[];clearInterval(oTimer);oTimer=setInterval(function(){pull().catch(function(){})},10000);$("ost").textContent="Terhubung, "+onus.length+" ONU dibaca dari OLT. Data diperbarui tiap 10 detik.";$("mchip").textContent="Mode online";log("Terhubung ke OLT, "+onus.length+" ONU dibaca");toast("Terhubung ke OLT");renderAll()}).catch(function(e){$("ost").textContent="Gagal: "+(e instanceof TypeError?"OLT tidak terjangkau atau diblokir browser. Cek IP dan kabel LAN, lalu buka Chrome dengan mode khusus di bawah":e.message);toast("Gagal terhubung")});return}
+  if(t.dataset.ack){acked[t.dataset.ack]=1;log("Alarm ditandai dibaca");renderAlm();return}
+  if(t.dataset.tp!==undefined){tp=+t.dataset.tp;document.querySelectorAll("#seg button").forEach(function(b){b.classList.toggle("on",b===t)});renderTraf();return}
+  if(t.dataset.dv){var dv=vlans.splice(+t.dataset.dv,1)[0];log("VLAN "+dv.id+" dihapus");renderSvc();return}
+  if(t.dataset.dp){var dp=profs[+t.dataset.dp];if(onus.some(function(o){return o.pf===dp.n})){toast("Profil masih dipakai ONU");return}profs.splice(+t.dataset.dp,1);log("Profil "+dp.n+" dihapus");renderSvc();return}
+  if(t.dataset.save){ip=$("ip").value.trim()||ip;var nm=$("dn").value.trim();if(nm)$("ttl").textContent=nm;log("Pengaturan perangkat disimpan");toast("Pengaturan disimpan");renderSum();return}
+  if(t.tagName==="TR"&&t.dataset.id){show(onus.filter(function(x){return x.id==t.dataset.id})[0]);return}
+  var a=t.dataset.a;if(!a)return;
+  var d=$("dlg"),o=onus.filter(function(x){return x.id==d.dataset.id})[0];
+  if(a==="close"){d.close();return}
+  if(online){toast("Mode online hanya membaca data. Aksi belum dikirim ke OLT");return}
+  if(a==="toggle"){o.s=o.s==="disabled"?"online":"disabled";log(o.name+(o.s==="disabled"?" dinonaktifkan":" diaktifkan"));toast(o.s==="disabled"?"ONU dinonaktifkan":"ONU diaktifkan")}
+  if(a==="del"){onus=onus.filter(function(x){return x!==o});log(o.name+" dihapus");toast("ONU dihapus")}
+  if(a==="reboot"){o.s="offline";log(o.name+" di-reboot");toast("Reboot dikirim");setTimeout(function(){if(o.s==="offline"){o.s="online";log(o.name+" kembali online");renderAll()}},3000)}
+  d.close();renderAll();
+});
+$("q").oninput=renderOnu;$("f").onchange=renderOnu;
+setInterval(function(){if(!online)onus.forEach(function(o){if(o.s==="online")o.rx=Math.round((o.rx+(Math.random()-.5)*.2)*10)/10});step();renderAll()},5000);
+log("Antarmuka dimulai dengan data simulasi");
+renderAll();
+if(inApp){
+  $("bm").closest(".card").style.display="none";
+  var cb=document.querySelector("[data-conn]");cb.closest(".tools").nextElementSibling.style.display="none";
+  var lo=document.createElement("button");lo.className="btn d";lo.textContent="Keluar";
+  lo.onclick=function(){try{localStorage.removeItem("olt-login")}catch(x){}location.reload()};cb.parentNode.appendChild(lo);
+  try{var sv=JSON.parse(localStorage.getItem("olt-login")||"null");if(sv){$("ip").value=sv.ip;$("ou").value=sv.u;$("opw").value=sv.p;$("op").value=sv.pg;ip=sv.ip;cb.click()}}catch(x){}
+}
+</script>
+</body>
+</html>
