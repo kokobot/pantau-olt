@@ -304,6 +304,7 @@ function pull(){
     onus=[].slice.call(tb.rows,hi+1).filter(function(r){return r.cells.length>1&&cell(r,"sn")}).map(function(r,i){
       var rx=parseFloat(cell(r,"rx").replace(",",".")),km=parseFloat(cell(r,"km"))||0,pn=(cell(r,"pon").match(/\d+/g)||[1]).pop();
       return{id:i+1,pon:+pn||1,name:cell(r,"name")||cell(r,"sn"),sn:cell(r,"sn")||"-",rx:isNaN(rx)?0:rx,km:km>100?km/1000:km,s:sState(cell(r,"s")),pf:profs[0].n}});
+    if(!onus.length)throw new Error("0 baris terbaca dari "+path+" (baris tabel: "+tb.rows.length+", header di baris "+hi+") ## HTML: "+tb.outerHTML.replace(/\s+/g," ").slice(0,700));
     renderAll();
   });
 }
