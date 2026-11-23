@@ -278,7 +278,7 @@ function pull(){
   }
   var SKIP=/del|reset|reboot|restart|default|logout|logo|save|clear|upgrade|factory|format|submit|remove|disable|enable|attempt|kick|apply|write/i,tried=[];
   function crawl(url,depth,seen){
-    if(seen.n>=30)return Promise.resolve(null);
+    if(seen.n>=40)return Promise.resolve(null);
     seen.n++;seen[url]=1;tried.push(url);
     return get(url).then(function(h){
       var f=find(h);if(f.best)return {url:url,r:f.best};
@@ -289,12 +289,14 @@ function pull(){
         if(!h2||/^(javascript|mailto|#)/i.test(h2)||/\.(css|js|png|jpe?g|gif|ico)(\?|$)/i.test(h2)||SKIP.test(h2))return;
         try{var x=new URL(h2,url);if(x.origin!==new URL(url).origin)return;var full=x.href.split("#")[0];if(!seen[full]&&L.indexOf(full)<0)L.push(full)}catch(z){}
       });
+      var re=/["'(]\s*([A-Za-z0-9_\/.\-]+\.(?:asp|aspx|htm|html|cgi|jsp|php)(?:\?[^"'\s<>)]*)?)\s*["')]/gi,mm;
+      while((mm=re.exec(h))){var h3=mm[1];if(SKIP.test(h3))continue;try{var y=new URL(h3,url);if(y.origin!==new URL(url).origin)continue;var f3=y.href.split("#")[0];if(!seen[f3]&&L.indexOf(f3)<0)L.push(f3)}catch(z){}}
       L.sort(function(a,c){return (/onu/i.test(c)?1:0)-(/onu/i.test(a)?1:0)});
       return L.reduce(function(p,l){return p.then(function(r){return r||(seen[l]?null:crawl(l,depth+1,seen))})},Promise.resolve(null))
     }).catch(function(e){if(depth===0&&/HTTP 401|tidak terjangkau/.test(e.message))throw e;return null})
   }
   return crawl(host+($("op").value.trim()||"/"),0,{n:0}).then(function(res){
-    if(!res)throw new Error("tabel ONU tidak ditemukan. Halaman yang dicoba: "+tried.slice(0,6).map(function(x){return x.replace(host,"")}).join(", "));
+    if(!res)throw new Error("tabel ONU tidak ditemukan. Halaman yang dicoba: "+tried.slice(0,12).map(function(x){return x.replace(host,"")}).join(", "));
     var path=res.url.replace(host,"");if(path!==$("op").value.trim()){$("op").value=path;saveLogin()}
     var tb=res.r.t,m=res.r.m,hi=res.r.hi;
     var cell=function(r,k){return m[k]===undefined||!r.cells[m[k]]?"":r.cells[m[k]].textContent.trim()};
