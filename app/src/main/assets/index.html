@@ -276,11 +276,12 @@ function pull(){
     });
     return {best:best,doc:doc}
   }
-  var SKIP=/del|reset|reboot|restart|default|logout|logo|save|clear|upgrade|factory|format|submit|remove|disable|enable|attempt|kick|apply|write/i,tried=[];
+  var SKIP=/del|reset|reboot|restart|default|logout|logo|save|clear|upgrade|factory|format|submit|remove|disable|enable|attempt|kick|apply|write/i,tried=[],snip="";
   function crawl(url,depth,seen){
     if(seen.n>=40)return Promise.resolve(null);
     seen.n++;seen[url]=1;tried.push(url);
     return get(url).then(function(h){
+      var q=h.search(/all\s*onu/i);if(q>=0&&!snip)snip=url.replace(host,"")+": "+h.slice(Math.max(0,q-250),q+150).replace(/\s+/g," ");
       var f=find(h);if(f.best)return {url:url,r:f.best};
       if(depth>=3)return null;
       var L=[];
@@ -296,7 +297,7 @@ function pull(){
     }).catch(function(e){if(depth===0&&/HTTP 401|tidak terjangkau/.test(e.message))throw e;return null})
   }
   return crawl(host+($("op").value.trim()||"/"),0,{n:0}).then(function(res){
-    if(!res)throw new Error("tabel ONU tidak ditemukan. Halaman yang dicoba: "+tried.slice(0,12).map(function(x){return x.replace(host,"")}).join(", "));
+    if(!res)throw new Error("tabel ONU tidak ditemukan. Halaman yang dicoba: "+tried.slice(0,12).map(function(x){return x.replace(host,"")}).join(", ")+(snip?" ## KODE: "+snip:""));
     var path=res.url.replace(host,"");if(path!==$("op").value.trim()){$("op").value=path;saveLogin()}
     var tb=res.r.t,m=res.r.m,hi=res.r.hi;
     var cell=function(r,k){return m[k]===undefined||!r.cells[m[k]]?"":r.cells[m[k]].textContent.trim()};
