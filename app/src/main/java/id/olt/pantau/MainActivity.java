@@ -1,6 +1,17 @@
 package id.olt.pantau;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.os.Build;
+import android.view.View;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -61,6 +72,69 @@ public class MainActivity extends Activity {
     }
 
     private class Bridge {
+        @JavascriptInterface
+        public boolean dark() {
+            return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+        }
+
+        @JavascriptInterface
+        public void bar(final boolean dark) {
+            runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    int c = dark ? Color.parseColor("#16213A") : Color.WHITE;
+                    getWindow().setStatusBarColor(c);
+                    getWindow().setNavigationBarColor(c);
+                    View v = getWindow().getDecorView();
+                    int f = v.getSystemUiVisibility();
+                    int light = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    if (Build.VERSION.SDK_INT >= 26) light |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    v.setSystemUiVisibility(dark ? (f & ~light) : (f | light));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void askNotif() {
+            runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                            != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void ping(String title, String text) {
+            try {
+                if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                        != PackageManager.PERMISSION_GRANTED) return;
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                nm.createNotificationChannel(new NotificationChannel("alarm", "Alarm OLT", NotificationManager.IMPORTANCE_HIGH));
+                PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 0,
+                    new Intent(MainActivity.this, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                Notification n = new Notification.Builder(MainActivity.this, "alarm")
+                    .setSmallIcon(R.drawable.ic_fg).setContentTitle(title).setContentText(text)
+                    .setStyle(new Notification.BigTextStyle().bigText(text))
+                    .setContentIntent(pi).setAutoCancel(true).build();
+                nm.notify((int) (System.currentTimeMillis() % 100000), n);
+            } catch (Exception ignored) { }
+        }
+
+        @JavascriptInterface
+        public void share(String subject, String text) {
+            Intent i = new Intent(Intent.ACTION_SEND);
+            i.setType("text/plain");
+            i.putExtra(Intent.EXTRA_SUBJECT, subject);
+            i.putExtra(Intent.EXTRA_TEXT, text);
+            Intent ch = Intent.createChooser(i, subject);
+            ch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(ch);
+        }
+
         @JavascriptInterface
         public void get(final String id, final String url, final String user, final String pass) {
             new Thread(new Runnable() {
